@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Steem node manager
+# MUSE node manager
 # Released under GNU AGPL by Someguy123
 #
 
@@ -8,7 +8,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DOCKER_DIR="$DIR/dkr"
 FULL_DOCKER_DIR="$DIR/dkr_fullnode"
 DATADIR="$DIR/data"
-DOCKER_NAME="seed"
+DOCKER_NAME="muse_seed"
 
 BOLD="$(tput bold)"
 RED="$(tput setaf 1)"
@@ -21,7 +21,7 @@ WHITE="$(tput setaf 7)"
 RESET="$(tput sgr0)"
 
 # default. override in .env
-PORTS="2001"
+PORTS="33333"
 
 if [[ -f .env ]]; then
     source .env
@@ -48,19 +48,19 @@ help() {
     echo "Usage: $0 COMMAND [DATA]"
     echo
     echo "Commands: "
-    echo "    start - starts steem container"
+    echo "    start - starts muse container"
     echo "    dlblocks - download and decompress the blockchain to speed up your first start"
-    echo "    replay - starts steem container (in replay mode)"
+    echo "    replay - starts muse container (in replay mode)"
     echo "    shm_size - resizes /dev/shm to size given, e.g. ./run.sh shm_size 10G "
-    echo "    stop - stops steem container"
-    echo "    status - show status of steem container"
-    echo "    restart - restarts steem container"
+    echo "    stop - stops muse container"
+    echo "    status - show status of muse container"
+    echo "    restart - restarts muse container"
     echo "    install_docker - install docker"
     echo "    install - pulls latest docker image from server (no compiling)"
     echo "    install_full - pulls latest (FULL NODE FOR RPC) docker image from server (no compiling)"
-    echo "    rebuild - builds steem container (from docker file), and then restarts it"
-    echo "    build - only builds steem container (from docker file)"
-    echo "    logs - show all logs inc. docker logs, and steem logs"
+    echo "    rebuild - builds muse container (from docker file), and then restarts it"
+    echo "    build - only builds muse container (from docker file)"
+    echo "    logs - show all logs inc. docker logs, and muse logs"
     echo "    wallet - open cli_wallet in the container"
     echo "    remote_wallet - open cli_wallet in the container connecting to a remote seed"
     echo "    enter - enter a bash session in the container"
@@ -78,42 +78,27 @@ optimize() {
 build() {
     echo $GREEN"Building docker container"$RESET
     cd $DOCKER_DIR
-    docker build -t steem .
+    docker build -t muse .
 }
 
 build_full() {
     echo $GREEN"Building full-node docker container"$RESET
     cd $FULL_DOCKER_DIR
-    docker build -t steem .
+    docker build -t muse .
 }
 
 dlblocks() {
+    echo "Not supported for MUSE yet"
     if [[ ! -d "$DATADIR/blockchain" ]]; then
         mkdir "$DATADIR/blockchain"
     fi
-    echo "Removing old block log"
-    sudo rm -f $DATADIR/witness_node_data_dir/blockchain/block_log
-    sudo rm -f $DATADIR/witness_node_data_dir/blockchain/block_log.index
-    echo "Download @gtg's block logs..."
-    if [[ ! $(command -v xz) ]]; then
-        echo "XZ not found. Attempting to install..."
-        sudo apt update
-        sudo apt install -y xz-utils
-    fi
-    wget https://gtg.steem.house/get/blockchain.xz/block_log.xz -O $DATADIR/witness_node_data_dir/blockchain/block_log.xz
-    echo "Decompressing block log... this may take a while..."
-    xz -d $DATADIR/witness_node_data_dir/blockchain/block_log.xz
-    echo "FINISHED. Blockchain downloaded and decompressed"
-    echo "Remember to resize your /dev/shm, and run with replay!"
-    echo "$ ./run.sh shm_size SIZE (e.g. 8G)"
-    echo "$ ./run.sh replay"
 }
 
 install_docker() {
     sudo apt update
     sudo apt install curl git
     curl https://get.docker.com | sh
-    if [ "$EUID" -ne 0 ]; then 
+    if [ "$EUID" -ne 0 ]; then
         echo "Adding user $(whoami) to docker group"
         sudo usermod -aG docker $(whoami)
         echo "IMPORTANT: Please re-login (or close and re-connect SSH) for docker to function correctly"
@@ -121,18 +106,18 @@ install_docker() {
 }
 
 install() {
-    echo "Loading image from someguy123/steem"
-    docker pull someguy123/steem
-    echo "Tagging as steem"
-    docker tag someguy123/steem steem
+    echo "Loading image from someguy123/muse"
+    docker pull someguy123/muse
+    echo "Tagging as muse"
+    docker tag someguy123/muse muse
     echo "Installation completed. You may now configure or run the server"
 }
 
 install_full() {
-    echo "Loading image from someguy123/steem"
-    docker pull someguy123/steem:latest-full
-    echo "Tagging as steem"
-    docker tag someguy123/steem:latest-full steem
+    echo "Loading image from someguy123/muse"
+    docker pull someguy123/muse:latest-full
+    echo "Tagging as muse"
+    docker tag someguy123/muse:latest-full muse
     echo "Installation completed. You may now configure or run the server"
 }
 seed_exists() {
@@ -159,15 +144,15 @@ start() {
     if [[ $? == 0 ]]; then
         docker start $DOCKER_NAME
     else
-        docker run $DPORTS -v /dev/shm:/shm -v "$DATADIR":/steem -d --name $DOCKER_NAME -t steem
+        docker run $DPORTS -v /dev/shm:/shm -v "$DATADIR":/muse -d --name $DOCKER_NAME -t muse
     fi
 }
 
 replay() {
     echo "Removing old container"
     docker rm $DOCKER_NAME
-    echo "Running steem with replay..."
-    docker run $DPORTS -v /dev/shm:/shm -v "$DATADIR":/steem -d --name $DOCKER_NAME -t steem steemd --replay
+    echo "Running muse with replay..."
+    docker run $DPORTS -v /dev/shm:/shm -v "$DATADIR":/muse -d --name $DOCKER_NAME -t muse /usr/local/bin/mused/mused --replay
     echo "Started."
 }
 
@@ -191,7 +176,7 @@ wallet() {
 }
 
 remote_wallet() {
-    docker run -v "$DATADIR":/steem --rm -it steem cli_wallet -s wss://steemd.steemit.com
+    docker run -v "$DATADIR":/muse --rm -it muse /usr/local/bin/cli_wallet/cli_wallet -s wss://api.muse.blckchnd.com
 }
 
 logs() {
@@ -202,12 +187,12 @@ logs() {
 }
 
 status() {
-    
+
     seed_exists
     if [[ $? == 0 ]]; then
         echo "Container exists?: "$GREEN"YES"$RESET
     else
-        echo "Container exists?: "$RED"NO (!)"$RESET 
+        echo "Container exists?: "$RED"NO (!)"$RESET
         echo "Container doesn't exist, thus it is NOT running. Run $0 build && $0 start"$RESET
         return
     fi
@@ -282,7 +267,7 @@ case $1 in
         remote_wallet
         ;;
     dlblocks)
-        dlblocks 
+        dlblocks
         ;;
     enter)
         enter
