@@ -172,7 +172,7 @@ enter() {
 }
 
 wallet() {
-    docker exec -it $DOCKER_NAME cli_wallet
+    docker exec -it $DOCKER_NAME /usr/local/bin/cli_wallet/cli_wallet 
 }
 
 remote_wallet() {
