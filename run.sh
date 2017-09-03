@@ -181,7 +181,7 @@ remote_wallet() {
 
 logs() {
     echo $BLUE"DOCKER LOGS: "$RESET
-    docker logs --tail=30 $DOCKER_NAME
+    docker logs -f --tail=30 $DOCKER_NAME | grep -v "getting authorities"
     #echo $RED"INFO AND DEBUG LOGS: "$RESET
     #tail -n 30 $DATADIR/{info.log,debug.log}
 }
