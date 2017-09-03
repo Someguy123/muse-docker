@@ -162,8 +162,8 @@ shm_size() {
 }
 
 stop() {
-    echo $RED"Stopping container... (60 seconds until force kill)"$RESET
-    docker stop -t 60 $DOCKER_NAME
+    echo $RED"Stopping container... "$RESET
+    docker stop $DOCKER_NAME
     docker rm $DOCKER_NAME
 }
 
